@@ -149,7 +149,7 @@ class ToolBox(QWidget):
         super().__init__()
         self.tools = []
         self.timer = QTimer()
-        self.timer.setInterval(1000)
+        self.timer.setInterval(500)
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.longPressed)
         self.popup = Popup()
@@ -192,6 +192,11 @@ class ToolBox(QWidget):
         self.timer.stop()
 
     def mouseMoveEvent(self, event):
+        if self.timer.isActive() and self.currentTool\
+        and event.pos().x() > self.rect().right():
+            self.longPressed()
+            self.timer.stop()
+            return
         for tool in self.tools:
             tool.setHighlighted(tool.contains(event.pos()))
         self.update()
@@ -202,8 +207,10 @@ class ToolBox(QWidget):
         self.update()
     
     def longPressed(self):
+        self.popup.setParent(Application.activeWindow().qwindow())
         self.popup.setTool(self.currentTool)
         self.popup.show()
+        self.popup.raise_()
         pass
     
     def resetAllTools(self):
@@ -286,7 +293,6 @@ class CoolBox(DockWidget):
         # hacky workaround but works
         if not self.firstTurn :
             self.toolBox.setEnabled(canvas is not None)
-            self.toolBox.popup.setParent(Application.activeWindow().qwindow())
             return
         
         self.firstTurn = False
